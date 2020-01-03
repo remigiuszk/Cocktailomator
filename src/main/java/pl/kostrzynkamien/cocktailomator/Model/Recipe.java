@@ -66,8 +66,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
         "strCreativeCommonsConfirmed",
         "dateModified"
 })
-public class Drink {
 
+
+public class Recipe {
     @JsonProperty("idDrink")
     private String idDrink;
     @JsonProperty("strDrink")

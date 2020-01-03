@@ -1,6 +1,4 @@
-
-
-        package pl.kostrzynkamien.cocktailomator.Model;
+package pl.kostrzynkamien.cocktailomator.Model;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,21 +14,21 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonPropertyOrder({
         "drinks"
 })
-public class CocktailJSON2POJO {
+public class Cocktail {
 
     @JsonProperty("drinks")
-    private List<Drink> drinks = null;
+    private List<Recipe> recipes = null;
     @JsonIgnore
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("drinks")
-    public List<Drink> getDrinks() {
-        return drinks;
+    public List<Recipe> getRecipes() {
+        return recipes;
     }
 
     @JsonProperty("drinks")
-    public void setDrinks(List<Drink> drinks) {
-        this.drinks = drinks;
+    public void setRecipes(List<Recipe> recipes) {
+        this.recipes = recipes;
     }
 
     @JsonAnyGetter
@@ -46,7 +44,7 @@ public class CocktailJSON2POJO {
     @Override
     public String toString() {
         return "CocktailJSON2POJO{" +
-                "drinks=" + drinks +
+                "drinks=" + recipes +
                 ", additionalProperties=" + additionalProperties +
                 '}';
     }

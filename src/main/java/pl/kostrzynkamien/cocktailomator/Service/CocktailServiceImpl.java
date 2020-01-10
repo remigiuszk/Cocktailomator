@@ -6,7 +6,6 @@ import pl.kostrzynkamien.cocktailomator.Model.FavouriteCocktail;
 import pl.kostrzynkamien.cocktailomator.Repo.CocktailRepo;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class CocktailServiceImpl implements CocktailService{

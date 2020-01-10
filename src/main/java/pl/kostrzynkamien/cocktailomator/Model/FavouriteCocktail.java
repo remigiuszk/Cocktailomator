@@ -1,6 +1,9 @@
 package pl.kostrzynkamien.cocktailomator.Model;
 
+import com.vaadin.flow.component.textfield.TextField;
+
 import javax.persistence.*;
+import java.util.ArrayList;
 
 @Entity
 public class FavouriteCocktail {

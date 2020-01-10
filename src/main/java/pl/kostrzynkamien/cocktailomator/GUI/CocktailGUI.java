@@ -1,6 +1,5 @@
 package pl.kostrzynkamien.cocktailomator.GUI;
 
-import com.fasterxml.jackson.databind.introspect.AnnotationCollector;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
@@ -15,6 +14,7 @@ import pl.kostrzynkamien.cocktailomator.Model.Recipe;
 import pl.kostrzynkamien.cocktailomator.Service.CocktailControler;
 import pl.kostrzynkamien.cocktailomator.Service.CocktailService;
 
+import java.util.ArrayList;
 
 
 @Route("cocktail")
@@ -23,8 +23,13 @@ public class CocktailGUI extends VerticalLayout {
     private CocktailControler cocktailControler;
     private CocktailService cocktailService;
     private TextField textFieldName,textFieldIngredient;
-    private Button buttonSearchByName,buttonGetRandomCocktail,buttonSearchIngredient, buttonAddFavourite,
-            buttonCreateNewCocktail, buttonDeleteFavouriteCocktail,buttonCreateNewFavouriteCocktail;
+    private Button buttonSearchByName;
+    private Button buttonGetRandomCocktail;
+    private Button buttonSearchIngredient;
+    private Button buttonAddFavourite;
+    private Button buttonCreateNewCocktail;
+    private Button buttonDeleteFavouriteCocktail;
+    private Button buttonPostOnFacebook;
     private Grid<Recipe> specificAndRandomGrid;
     private Grid<FavouriteCocktail> favouriteGrid;
 
@@ -36,6 +41,9 @@ public class CocktailGUI extends VerticalLayout {
         favouriteGridSet(favouriteGrid);
         specificAndRandomGridSet(specificAndRandomGrid);
 
+        buttonPostOnFacebook.addClickListener(clickEvent -> {
+            postOnFacebook();
+        });
         buttonCreateNewCocktail.addClickListener(clickEvent -> {
             createANewCocktail(cocktailService);
         });
@@ -56,7 +64,35 @@ public class CocktailGUI extends VerticalLayout {
             showIngredientInfo(cocktailControler);
         });
         add(favouriteGrid,buttonCreateNewCocktail,buttonDeleteFavouriteCocktail, textFieldName,buttonSearchByName,textFieldIngredient,
-                buttonSearchIngredient,buttonGetRandomCocktail,specificAndRandomGrid,buttonAddFavourite);
+                buttonSearchIngredient,buttonGetRandomCocktail,specificAndRandomGrid,buttonAddFavourite,buttonPostOnFacebook);
+    }
+
+    private void postOnFacebook() {
+        Dialog dialog=new Dialog();
+        Label label=new Label("Which cocktail do you want to share on facebook?");
+        Button post=new Button("Post on facebook");
+        Button cancel=new Button("Cancel");
+        dialog.add(label,favouriteGrid,post,cancel);
+        dialog.open();
+        post.addClickListener(clickEvent -> {
+            createAPost();
+            dialog.close();
+        });
+        cancel.addClickListener(clickEvent -> {
+            dialog.close();
+        });
+    }
+
+    private void createAPost() {
+        if (favouriteGrid.getSelectionModel().getFirstSelectedItem().isPresent()){
+            FavouriteCocktail favouriteCocktail = favouriteGrid.getSelectionModel().getFirstSelectedItem().get();
+
+        }
+        else{
+            Notification.show("Select a post!",
+                    5000, Notification.Position.TOP_CENTER);
+            postOnFacebook();
+        }
     }
 
     private void showIngredientInfo(CocktailControler cocktailControler) {
@@ -88,63 +124,49 @@ public class CocktailGUI extends VerticalLayout {
     }
 
     private void createANewCocktail(CocktailService cocktailService){
+        ArrayList<TextField> ingredientList=new ArrayList<>();
+        ArrayList<TextField> measureList=new ArrayList<>();
         TextField drinkName = new TextField("Enter Name");
         TextField category = new TextField("Enter Category");
         TextField genre = new TextField("Enter Genre");
         TextField glass = new TextField("Enter Glass");
         TextField instructions = new TextField("Enter Instructions");
         TextField drinkThumb = new TextField("Enter DrinkThumb");
-        TextField ingredient1 = new TextField("Enter Ingredient1");
-        TextField ingredient2 = new TextField("Enter ingredient2");
-        TextField ingredient3 = new TextField("Enter ingredient3");
-        TextField ingredient4 = new TextField("Enter ingredient4");
-        TextField ingredient5 = new TextField("Enter ingredient5");
-        TextField ingredient6 = new TextField("Enter ingredient6");
-        TextField ingredient7 = new TextField("Enter Ingredient7");
-        TextField ingredient8 = new TextField("Enter Ingredient8");
-        TextField ingredient9 = new TextField("Enter Ingredient9");
-        TextField ingredient10 = new TextField("Enter Ingredient10");
-        TextField ingredient11 = new TextField("Enter Ingredient11");
-        TextField ingredient12 = new TextField("Enter Ingredient12");
-        TextField ingredient13 = new TextField("Enter Ingredient13");
-        TextField ingredient14 = new TextField("Enter Ingredient14");
-        TextField ingredient15 = new TextField("Enter Ingredient15");
-        TextField measure1 = new TextField("Enter Measure1");
-        TextField measure2 = new TextField("Enter Measure2");
-        TextField measure3 = new TextField("Enter Measure3");
-        TextField measure4 = new TextField("Enter Measure4");
-        TextField measure5 = new TextField("Enter Measure5");
-        TextField measure6 = new TextField("Enter Measure6");
-        TextField measure7 = new TextField("Enter Measure7");
-        TextField measure8 = new TextField("Enter Measure8");
-        TextField measure9 = new TextField("Enter Measure9");
-        TextField measure10 = new TextField("Enter Measure10");
-        TextField measure11 = new TextField("Enter Measure11");
-        TextField measure12 = new TextField("Enter Measure12");
-        TextField measure13 = new TextField("Enter Measure13");
-        TextField measure14 = new TextField("Enter Measure14");
-        TextField measure15 = new TextField("Enter Measure15");
-        buttonCreateNewFavouriteCocktail = new Button("Add a new Cocktail");
+        for(int i=0;i<=14;i++){
+            ingredientList.add(new TextField("Enter Ingredient "+i));
+            measureList.add(new TextField("Enter Measure "+i));
+        }
+        Button buttonCreateNewFavouriteCocktail = new Button("Add a new Cocktail");
         Dialog dialog = new Dialog();
-        dialog.add(drinkName,category,genre,glass,instructions,drinkThumb,ingredient1,measure1,ingredient2,measure2,ingredient3,measure3,
-                ingredient4,measure4,ingredient5,measure5,ingredient6,measure6,ingredient7,measure7,
-                ingredient8,measure8,ingredient9,measure9,ingredient10,measure10,ingredient11,measure11,ingredient12,measure12,
-                ingredient13,measure13,ingredient14,measure14,ingredient15,measure15,buttonCreateNewFavouriteCocktail);
+        dialog.add(drinkName,category,genre,glass,instructions,drinkThumb,ingredientList.get(0),
+                measureList.get(0),ingredientList.get(1),measureList.get(1),ingredientList.get(2), measureList.get(2),
+                ingredientList.get(3),measureList.get(3),ingredientList.get(4), measureList.get(4),ingredientList.get(5),
+                measureList.get(5),ingredientList.get(6), measureList.get(6),ingredientList.get(7),measureList.get(7),
+                ingredientList.get(8), measureList.get(8),ingredientList.get(9),measureList.get(9),ingredientList.get(10),
+                measureList.get(10),ingredientList.get(11),measureList.get(11),ingredientList.get(12),measureList.get(12),
+                ingredientList.get(13),measureList.get(13),ingredientList.get(14),measureList.get(14), buttonCreateNewFavouriteCocktail);
         setDialog(dialog);
         buttonCreateNewFavouriteCocktail.addClickListener(clickEvent -> {
-            CreateNewFromDialog(cocktailService, drinkName, category, genre, glass, instructions, drinkThumb, ingredient1, ingredient2, ingredient3, ingredient4, ingredient5, ingredient6, ingredient7, ingredient8, ingredient9, ingredient10, ingredient11, ingredient12, ingredient13, ingredient14, ingredient15, measure1, measure2, measure3, measure4, measure5, measure6, measure7, measure8, measure9, measure10, measure11, measure12, measure13, measure14, measure15);
+            CreateNewFromDialog(cocktailService, drinkName, category, genre, glass, instructions, drinkThumb, ingredientList,  measureList);
+            dialog.close();
         });
     }
 
-    private void CreateNewFromDialog(CocktailService cocktailService, TextField drinkName, TextField category, TextField genre, TextField glass, TextField instructions, TextField drinkThumb, TextField ingredient1, TextField ingredient2, TextField ingredient3, TextField ingredient4, TextField ingredient5, TextField ingredient6, TextField ingredient7, TextField ingredient8, TextField ingredient9, TextField ingredient10, TextField ingredient11, TextField ingredient12, TextField ingredient13, TextField ingredient14, TextField ingredient15, TextField measure1, TextField measure2, TextField measure3, TextField measure4, TextField measure5, TextField measure6, TextField measure7, TextField measure8, TextField measure9, TextField measure10, TextField measure11, TextField measure12, TextField measure13, TextField measure14, TextField measure15) {
+    private void CreateNewFromDialog(CocktailService cocktailService, TextField drinkName, TextField category, TextField genre, TextField glass, TextField instructions, TextField drinkThumb,
+                                     ArrayList<TextField> ingredientList, ArrayList<TextField> measureList) {
         try {
-            if(!drinkName.getValue().isEmpty()&&!instructions.getValue().isEmpty()&&!ingredient1.getValue().isEmpty()&&!measure1.getValue().isEmpty()) {
-            FavouriteCocktail favouriteCocktail = new FavouriteCocktail(drinkName.getValue(), category.getValue(), genre.getValue(), glass.getValue(), instructions.getValue(), drinkThumb.getValue(),
-                    ingredient1.getValue(), ingredient2.getValue(), ingredient3.getValue(), ingredient4.getValue(), ingredient5.getValue(), ingredient6.getValue(), ingredient7.getValue(),
-                    ingredient8.getValue(), ingredient9.getValue(), ingredient10.getValue(), ingredient11.getValue(), ingredient12.getValue(), ingredient13.getValue(),
-                    ingredient14.getValue(), ingredient15.getValue(), measure1.getValue(), measure2.getValue(), measure3.getValue(), measure4.getValue(), measure5.getValue(),
-                    measure6.getValue(), measure7.getValue(), measure8.getValue(), measure9.getValue(), measure10.getValue(), measure11.getValue(), measure12.getValue(), measure13.getValue(),
-                    measure14.getValue(), measure15.getValue());
+            if(!drinkName.getValue().isEmpty()&&!instructions.getValue().isEmpty()&&!ingredientList.get(0).isEmpty()&&!measureList.get(0).isEmpty()) {
+
+            FavouriteCocktail favouriteCocktail = new FavouriteCocktail(drinkName.getValue(), category.getValue(), genre.getValue(), glass.getValue(),
+                    instructions.getValue(), drinkThumb.getValue(),ingredientList.get(0).getValue(), measureList.get(0).getValue(),ingredientList.get(1).getValue(),
+                    measureList.get(1).getValue(),ingredientList.get(2).getValue(), measureList.get(2).getValue(), ingredientList.get(3).getValue(),
+                    measureList.get(3).getValue(),ingredientList.get(4).getValue(), measureList.get(4).getValue(),ingredientList.get(5).getValue(),
+                    measureList.get(5).getValue(),ingredientList.get(6).getValue(), measureList.get(6).getValue(),ingredientList.get(7).getValue(),
+                    measureList.get(7).getValue(), ingredientList.get(8).getValue(), measureList.get(8).getValue(),ingredientList.get(9).getValue(),
+                    measureList.get(9).getValue(),ingredientList.get(10).getValue(), measureList.get(10).getValue(),ingredientList.get(11).getValue(),
+                    measureList.get(11).getValue(),ingredientList.get(12).getValue(), measureList.get(12).getValue(), ingredientList.get(13).getValue(),
+                    measureList.get(13).getValue(),ingredientList.get(14).getValue(), measureList.get(14).getValue());
+
                 cocktailService.addFavouriteCocktail(favouriteCocktail);
                 favouriteGrid.setItems(cocktailService.getAllFavouriteCocktails());
             }
@@ -194,6 +216,7 @@ public class CocktailGUI extends VerticalLayout {
         buttonAddFavourite = new Button("Add a selected cocktail to your favourites");
         buttonCreateNewCocktail = new Button("Click to create a new cocktail");
         buttonDeleteFavouriteCocktail = new Button("Click to delete a cocktail");
+        buttonPostOnFacebook = new Button("Post on facebook");
     }
 
     private void specificAndRandomGridSet(Grid<Recipe> grid) {

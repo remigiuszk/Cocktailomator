@@ -3,6 +3,7 @@ package pl.kostrzynkamien.cocktailomator.GUI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -14,6 +15,7 @@ import pl.kostrzynkamien.cocktailomator.Model.Recipe;
 import pl.kostrzynkamien.cocktailomator.Service.CocktailControler;
 import pl.kostrzynkamien.cocktailomator.Service.CocktailService;
 
+
 import java.util.ArrayList;
 
 
@@ -22,6 +24,7 @@ public class CocktailGUI extends VerticalLayout {
 
     private CocktailControler cocktailControler;
     private CocktailService cocktailService;
+    private FacebookShareGui facebookShareGui;
     private TextField textFieldName,textFieldIngredient;
     private Button buttonSearchByName;
     private Button buttonGetRandomCocktail;
@@ -35,7 +38,8 @@ public class CocktailGUI extends VerticalLayout {
 
 
     @Autowired
-    public CocktailGUI(CocktailControler cocktailControler, CocktailService cocktailService) {
+    public CocktailGUI(CocktailControler cocktailControler, CocktailService cocktailService, FacebookShareGui facebookShareGui) {
+        this.facebookShareGui=facebookShareGui;
         this.cocktailService=cocktailService;
         fieldsInit();
         favouriteGridSet(favouriteGrid);
@@ -58,7 +62,7 @@ public class CocktailGUI extends VerticalLayout {
         });
         buttonSearchByName.addClickListener(clickEvent -> {
             getCocktailAndDisplay(cocktailControler, "https://www.thecocktaildb.com/api/json/v1/1/search.php?s="+
-                    textFieldName.getValue().replaceAll(" ",""), "Connection error! Try again later");
+                    textFieldName.getValue().replaceAll(" ","_"), "Connection error! Try again later");
         });
         buttonSearchIngredient.addClickListener(clickEvent -> {
             showIngredientInfo(cocktailControler);
@@ -72,10 +76,13 @@ public class CocktailGUI extends VerticalLayout {
         Label label=new Label("Which cocktail do you want to share on facebook?");
         Button post=new Button("Post on facebook");
         Button cancel=new Button("Cancel");
-        dialog.add(label,favouriteGrid,post,cancel);
+        Grid<FavouriteCocktail> gridFacebookShare= new Grid<>(FavouriteCocktail.class);
+        gridFacebookShare.setItems(cocktailService.getAllFavouriteCocktails());
+        favouriteGridSet(gridFacebookShare);
+        dialog.add(label,gridFacebookShare,post,cancel);
         dialog.open();
         post.addClickListener(clickEvent -> {
-            createAPost();
+            createAPost(gridFacebookShare);
             dialog.close();
         });
         cancel.addClickListener(clickEvent -> {
@@ -83,10 +90,19 @@ public class CocktailGUI extends VerticalLayout {
         });
     }
 
-    private void createAPost() {
-        if (favouriteGrid.getSelectionModel().getFirstSelectedItem().isPresent()){
-            FavouriteCocktail favouriteCocktail = favouriteGrid.getSelectionModel().getFirstSelectedItem().get();
-
+    private void createAPost(Grid<FavouriteCocktail> gridFacebookShare) {
+        if (gridFacebookShare.getSelectionModel().getFirstSelectedItem().isPresent()){
+            FavouriteCocktail favouriteCocktail = gridFacebookShare.getSelectionModel().getFirstSelectedItem().get();
+            Grid<FavouriteCocktail> gridSharedCocktail=new Grid<>(FavouriteCocktail.class);
+            gridSharedCocktail.setItems(favouriteCocktail);
+            favouriteGridSet(gridSharedCocktail);
+            facebookShareGui.init(gridSharedCocktail);
+            try {
+                Runtime.getRuntime().exec( "rundll32 url.dll,FileProtocolHandler " + "https://www.google.com/");
+            } catch (Exception e) {
+                Notification.show("Connection Error!",
+                        5000, Notification.Position.TOP_CENTER);
+            }
         }
         else{
             Notification.show("Select a post!",
@@ -97,9 +113,9 @@ public class CocktailGUI extends VerticalLayout {
 
     private void showIngredientInfo(CocktailControler cocktailControler) {
         Dialog dialog=new Dialog();
-        if(cocktailControler.getIngredientInfo(textFieldIngredient.getValue().replaceAll(" ",""))!=null)
+        if(cocktailControler.getIngredientInfo(textFieldIngredient.getValue().replaceAll(" ","_"))!=null)
         {
-            dialog.add(new Label(cocktailControler.getIngredientInfo(textFieldIngredient.getValue().replaceAll(" ",""))));
+            dialog.add(new Label(cocktailControler.getIngredientInfo(textFieldIngredient.getValue().replaceAll(" ","_"))));
             setDialog(dialog);
         }
             else Notification.show("Ingredient not found",
@@ -178,7 +194,7 @@ public class CocktailGUI extends VerticalLayout {
         }
     }
 
-    private void favouriteAdder(CocktailService cocktailService) {
+    private void favouriteAdder(CocktailService cocktailService){
         if(specificAndRandomGrid.getSelectionModel().getFirstSelectedItem().isPresent()) {
             Recipe cocktail = specificAndRandomGrid.getSelectionModel().getFirstSelectedItem().get();
             FavouriteCocktail favouriteCocktail = new FavouriteCocktail(cocktail.getStrDrink(),cocktail.getStrCategory(),cocktail.getStrAlcoholic(),cocktail.getStrGlass(),
@@ -225,6 +241,20 @@ public class CocktailGUI extends VerticalLayout {
                 "strMeasure5","strIngredient6", "strMeasure6","strIngredient7", "strMeasure7","strIngredient8","strMeasure8",
                 "strIngredient9","strMeasure9", "strIngredient10","strMeasure10", "strIngredient11","strMeasure11", "strIngredient12",
                 "strMeasure12","strIngredient13","strMeasure13", "strIngredient14","strMeasure14", "strIngredient15", "strMeasure15");
+        grid.addComponentColumn(i -> getPictureUrl(i.getStrDrinkThumb())).setHeader("Picture").setKey("picture");
+
+        grid.setColumnOrder(grid.getColumnByKey("picture"),grid.getColumnByKey("strDrink"),grid.getColumnByKey("strCategory"),
+                grid.getColumnByKey("strAlcoholic"),grid.getColumnByKey("strGlass"),grid.getColumnByKey("strInstructions"),
+                grid.getColumnByKey("strIngredient1"),grid.getColumnByKey("strMeasure1"),grid.getColumnByKey("strIngredient2"),
+                grid.getColumnByKey("strMeasure2"),grid.getColumnByKey("strIngredient3"),grid.getColumnByKey("strMeasure3"),
+                grid.getColumnByKey("strIngredient4"),grid.getColumnByKey("strMeasure4"),grid.getColumnByKey("strIngredient5"),
+                grid.getColumnByKey("strMeasure5"),grid.getColumnByKey("strIngredient6"),grid.getColumnByKey("strMeasure6"),
+                grid.getColumnByKey("strIngredient7"),grid.getColumnByKey("strMeasure7"),grid.getColumnByKey("strIngredient8"),
+                grid.getColumnByKey("strMeasure8"),grid.getColumnByKey("strIngredient9"),grid.getColumnByKey("strMeasure9"),
+                grid.getColumnByKey("strIngredient10"),grid.getColumnByKey("strMeasure10"),grid.getColumnByKey("strIngredient11"),
+                grid.getColumnByKey("strMeasure11"),grid.getColumnByKey("strIngredient12"),grid.getColumnByKey("strMeasure12"),
+                grid.getColumnByKey("strIngredient13"),grid.getColumnByKey("strMeasure13"),grid.getColumnByKey("strIngredient14"),
+                grid.getColumnByKey("strMeasure14"),grid.getColumnByKey("strIngredient15"),grid.getColumnByKey("strMeasure15"));
 
         grid.getColumnByKey("strDrink").setHeader("Drink Name");
         grid.getColumnByKey("strCategory").setHeader("Category");
@@ -246,6 +276,21 @@ public class CocktailGUI extends VerticalLayout {
                 "strMeasure5","strIngredient6", "strMeasure6","strIngredient7", "strMeasure7","strIngredient8","strMeasure8",
                 "strIngredient9","strMeasure9", "strIngredient10","strMeasure10", "strIngredient11","strMeasure11", "strIngredient12",
                 "strMeasure12","strIngredient13","strMeasure13", "strIngredient14","strMeasure14", "strIngredient15", "strMeasure15");
+        grid.addComponentColumn(i -> getPictureUrl(i.getStrDrinkThumb())).setHeader("Picture").setKey("picture");
+
+        grid.setColumnOrder(grid.getColumnByKey("picture"),grid.getColumnByKey("strDrink"),grid.getColumnByKey("strCategory"),
+                grid.getColumnByKey("strAlcoholic"),grid.getColumnByKey("strGlass"),grid.getColumnByKey("strInstructions"),
+                grid.getColumnByKey("strIngredient1"),grid.getColumnByKey("strMeasure1"),grid.getColumnByKey("strIngredient2"),
+                grid.getColumnByKey("strMeasure2"),grid.getColumnByKey("strIngredient3"),grid.getColumnByKey("strMeasure3"),
+                grid.getColumnByKey("strIngredient4"),grid.getColumnByKey("strMeasure4"),grid.getColumnByKey("strIngredient5"),
+                grid.getColumnByKey("strMeasure5"),grid.getColumnByKey("strIngredient6"),grid.getColumnByKey("strMeasure6"),
+                grid.getColumnByKey("strIngredient7"),grid.getColumnByKey("strMeasure7"),grid.getColumnByKey("strIngredient8"),
+                grid.getColumnByKey("strMeasure8"),grid.getColumnByKey("strIngredient9"),grid.getColumnByKey("strMeasure9"),
+                grid.getColumnByKey("strIngredient10"),grid.getColumnByKey("strMeasure10"),grid.getColumnByKey("strIngredient11"),
+                grid.getColumnByKey("strMeasure11"),grid.getColumnByKey("strIngredient12"),grid.getColumnByKey("strMeasure12"),
+                grid.getColumnByKey("strIngredient13"),grid.getColumnByKey("strMeasure13"),grid.getColumnByKey("strIngredient14"),
+                grid.getColumnByKey("strMeasure14"),grid.getColumnByKey("strIngredient15"),grid.getColumnByKey("strMeasure15"));
+
         grid.getColumnByKey("strDrink").setHeader("Drink Name");
         grid.getColumnByKey("strCategory").setHeader("Category");
         grid.getColumnByKey("strAlcoholic").setHeader("Alcoholic");
@@ -260,4 +305,10 @@ public class CocktailGUI extends VerticalLayout {
         grid.getColumns().forEach(cocktailColumn -> cocktailColumn.setAutoWidth(true));
     }
 
+    private Image getPictureUrl(String thumb){
+        Image image= new Image(thumb, "alt text");
+        image.setWidth("200px");
+        image.setHeight("200px");
+        return image;
+    }
 }
